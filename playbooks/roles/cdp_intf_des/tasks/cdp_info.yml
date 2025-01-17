@@ -1,0 +1,55 @@
+---
+- name: "Task 1: Get Hostname Output"
+  ios_command:
+    commands:
+      - show run | include hostname
+  register: hostname
+
+- name: "Extract Hostname"
+  set_fact:
+    device_hostname: "{{ hostname.stdout_lines[0] | select('search', '^hostname\\s+') | map('regex_replace', '^hostname\\s+', '') | list | first | default('') }}"
+
+- name: "RUN PARSER WITH TEXTFSM"
+  ansible.utils.cli_parse:
+    command: "show cdp neighbors detail"
+    parser:
+      name: ansible.utils.textfsm
+      template_path: "/home/ttweed98/CDP_INTF/CDP_Intf_Desc/playbooks/ntc-templates/ntc_templates/templates/cisco_ios_show_cdp_neighbors_detail.textfsm"
+    set_fact: neighbor_data
+    
+- name: "LIST ATTACHED CISCO DEVICES"
+  set_fact: 
+    IOS: "{{ neighbor_data | selectattr('NEIGHBOR_DESCRIPTION', 'contains', 'Cisco')}}"
+       
+- name: "CREATE A LIST OF UNIQUE NEIGHBOR AND INTERFACE COMBINATIONS"
+  set_fact:
+    neighbor_interfaces: |
+      {% set combinations = [] %}
+      {% for device in IOS %}
+      {% set combo = {'name': device.NEIGHBOR_NAME, 'local_int': device.LOCAL_INTERFACE, 'remote_int': device.NEIGHBOR_INTERFACE} %}
+      {% if combo not in combinations %}
+      {% set _ = combinations.append(combo) %}
+      {% endif %}
+      {% endfor %}
+      {{ combinations }}
+
+- name: Create a list of devices for each host
+  set_fact:
+    devices_for_host: |
+      Devices:
+      {% for combo in neighbor_interfaces %}
+        - Hostname: {{ device_hostname }}
+          Neighbor: {{ combo.name }}
+          Local_Port: {{ combo.local_int }}
+          Remote_Port: {{ combo.remote_int }}
+      {% endfor %}
+    
+- name: Save devices data into a YAML file
+  copy:
+    content: "{{ devices_for_host }}"
+    dest: "/home/ttweed98/CDP_INTF/CDP_Intf_Desc/playbooks/files/{{ device_hostname }}_neighbors.yaml"
+  delegate_to: localhost
+
+- name: Display generated YAML content
+  debug:
+    msg: "{{ devices_for_host }}"

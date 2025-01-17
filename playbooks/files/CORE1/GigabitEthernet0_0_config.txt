@@ -1,0 +1,10 @@
+Building configuration...
+
+Current configuration : 149 bytes
+!
+interface GigabitEthernet0/0
+ description CX: Switch_GigabitEthernet0/2
+ no switchport
+ ip address 10.0.0.241 255.255.255.0
+ negotiation auto
+end

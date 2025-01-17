@@ -1,0 +1,80 @@
+---
+- name: Read Neighbor File
+  slurp:
+    src: "/home/ttweed98/CDP_INTF/CDP_Intf_Desc/playbooks/files/{{ inventory_hostname }}_neighbors.yaml"
+  register: neighbor_file
+  
+- name: Parse Neighbor Data
+  set_fact:
+    neighbor_data: "{{ neighbor_file['content'] | b64decode | from_yaml }}"
+  
+- name: Find All Interface Configuration Files
+  find:
+    paths: "/home/ttweed98/CDP_INTF/CDP_Intf_Desc/playbooks/files/{{ inventory_hostname }}"
+    patterns: "GigabitEthernet*_config.txt"
+  register: interface_files
+  
+- name: Read All Interface Configurations
+  slurp:
+    src: "{{ item.path }}"
+  register: config_contents
+  loop: "{{ interface_files.files }}"
+  
+- name: Create Interface Configs Dictionary
+  set_fact:
+    interface_configs: "{{ interface_configs | default({}) | combine({
+      (item.item.path | basename | regex_replace('_config.txt$', '') | regex_replace('_', '/')): 
+      (item.content | b64decode | split('\n'))
+    }) }}"
+  loop: "{{ config_contents.results }}"
+  loop_control:
+    label: "{{ item.item.path | basename }}"
+
+- name: Initialize Updates List
+  set_fact:
+    updates_needed: []
+
+- name: Compare Configurations and Generate Updates
+  vars:
+    expected_desc: "description CX: {{ device.Neighbor }}_{{ device.Remote_Port }}"
+  set_fact:
+    updates_needed: "{{ updates_needed + [{
+      'interface': device.Local_Port,
+      'description': device.Neighbor + '_' + device.Remote_Port
+    }] }}"
+  when: >-
+    device.Local_Port in interface_configs.keys()
+    and not (interface_configs[device.Local_Port] | select('match', expected_desc) | list | length > 0)
+  loop: "{{ neighbor_data.Devices }}"
+  loop_control:
+    loop_var: device
+
+- name: Initialize CLI Commands List
+  set_fact:
+    cli_commands: []
+
+- name: Generate Interface Commands
+  set_fact:
+    cli_commands: "{{ cli_commands + ['interface ' + item.interface, ' description CX: ' + item.description] }}"
+  loop: "{{ updates_needed }}"
+  loop_control:
+    label: "{{ item.interface }}"
+
+- name: Display Planned Updates
+  debug:
+    msg: 
+      - "Interfaces requiring updates:"
+      - "{{ updates_needed }}"
+      - "Commands to be executed:"
+      - "{{ cli_commands }}"
+
+- name: Apply Configuration Updates
+  ios_config:
+    lines: "{{ cli_commands }}"
+  when: cli_commands | length > 0
+  register: config_result
+
+- name: Show Configuration Results
+  debug:
+    msg: "Configuration updates completed successfully"
+  when: config_result is success

@@ -1,0 +1,11 @@
+Building configuration...
+
+Current configuration : 196 bytes
+!
+interface GigabitEthernet2/0
+ description CX: CORE2.cisco.com_GigabitEthernet2/0
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ negotiation auto
+ channel-group 1 mode active
+end

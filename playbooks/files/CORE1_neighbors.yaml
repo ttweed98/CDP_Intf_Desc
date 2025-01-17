@@ -1,0 +1,25 @@
+Devices:
+  - Hostname: CORE1
+    Neighbor: SW1.cisco.com
+    Local_Port: GigabitEthernet1/1
+    Remote_Port: GigabitEthernet0/1
+  - Hostname: CORE1
+    Neighbor: SW2.cisco.com
+    Local_Port: GigabitEthernet1/2
+    Remote_Port: GigabitEthernet0/1
+  - Hostname: CORE1
+    Neighbor: Switch
+    Local_Port: GigabitEthernet0/0
+    Remote_Port: GigabitEthernet0/2
+  - Hostname: CORE1
+    Neighbor: CORE2.cisco.com
+    Local_Port: GigabitEthernet2/0
+    Remote_Port: GigabitEthernet2/0
+  - Hostname: CORE1
+    Neighbor: CORE2.cisco.com
+    Local_Port: GigabitEthernet1/0
+    Remote_Port: GigabitEthernet1/0
+  - Hostname: CORE1
+    Neighbor: R1.cisco.com
+    Local_Port: GigabitEthernet0/1
+    Remote_Port: GigabitEthernet0/1

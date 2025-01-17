@@ -1,0 +1,10 @@
+Building configuration...
+
+Current configuration : 155 bytes
+!
+interface GigabitEthernet0/1
+ description CX: R1.cisco.com_GigabitEthernet0/1
+ no switchport
+ ip address 10.1.1.2 255.255.255.252
+ negotiation auto
+end

@@ -1,0 +1,38 @@
+---
+- name: Read the neighbor device configuration from YAML file
+  set_fact:
+    device_neighbors: "{{ lookup('file', '/home/ttweed98/CDP_INTF/CDP_Intf_Desc/playbooks/files/{{ inventory_hostname }}_neighbors.yaml') | from_yaml }}"
+    
+- name: Iterate over the devices in the YAML and get the interface configuration
+  cisco.ios.ios_command:
+    commands:
+      - show running-config interface {{ item.Local_Port }}
+  loop: "{{ device_neighbors.Devices }}"
+  loop_control:
+    loop_var: item
+  register: interface_configs
+
+- name: Print output
+  debug:
+    msg: "{{ interface_configs }}"
+
+# Ensure the directory exists, not the file
+- name: Ensure the destination directory exists
+  file:
+    path: "/home/ttweed98/CDP_INTF/CDP_Intf_Desc/playbooks/files/{{ inventory_hostname }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ interface_configs.results }}"
+  loop_control:
+    loop_var: result
+  when: result.stdout is defined
+
+# Save the configuration of each interface to a file, only if the file does not already exist
+- name: Save the configuration of each interface to a file
+  copy:
+    content: "{{ result.stdout | join('\n') }}"  # Join stdout lines into a single string
+    dest: "/home/ttweed98/CDP_INTF/CDP_Intf_Desc/playbooks/files/{{ inventory_hostname }}/{{ result.item.Local_Port | regex_replace('/', '_') }}_config.txt"
+    force: no  # Do not overwrite if the file already exists
+  loop: "{{ interface_configs.results }}"
+  loop_control:
+    loop_var: result  # Ensure consistent loop variable

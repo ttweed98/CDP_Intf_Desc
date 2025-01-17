@@ -1,0 +1,8 @@
+Building configuration...
+
+Current configuration : 104 bytes
+!
+interface GigabitEthernet1/2
+ description CX: SW2.cisco.com_GigabitEthernet0/1
+ negotiation auto
+end

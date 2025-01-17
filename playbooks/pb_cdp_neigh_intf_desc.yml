@@ -1,0 +1,8 @@
+---
+- name: "CONFIGURE LOCAL INTERFACES BASED ON CDP NEIGHBOR INFORMATION"
+  hosts: core 
+  gather_facts: false 
+  connection: network_cli 
+
+  roles:
+    - role: "cdp_intf_des"

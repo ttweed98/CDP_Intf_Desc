@@ -1,0 +1,9 @@
+---
+- name: "Create CDP NEIGHBOR INFORMATION"
+  ansible.builtin.include_tasks: "cdp_info.yml"
+
+- name: "GATHER RUNNING INTERFACE CONFIGURATIONS FROM HOST"
+  ansible.builtin.include_tasks: "intf_configs.yml"
+
+- name: "UPDATE INTERFACE DESCRIPTIONS BASED ON CDP NEIGHBOR NAMES"
+  ansible.builtin.include_tasks: "update_intf_desc.yml"
