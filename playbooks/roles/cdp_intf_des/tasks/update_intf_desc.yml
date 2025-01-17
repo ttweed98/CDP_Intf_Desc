@@ -36,7 +36,7 @@
 
 - name: Compare Configurations and Generate Updates
   vars:
-    expected_desc: "description CX: {{ device.Neighbor }}_{{ device.Remote_Port }}"
+    expected_desc: "description LAN: {{ device.Neighbor }}_{{ device.Remote_Port }}"
   set_fact:
     updates_needed: "{{ updates_needed + [{
       'interface': device.Local_Port,
@@ -55,7 +55,7 @@
 
 - name: Generate Interface Commands
   set_fact:
-    cli_commands: "{{ cli_commands + ['interface ' + item.interface, ' description CX: ' + item.description] }}"
+    cli_commands: "{{ cli_commands + ['interface ' + item.interface, ' description LAN: ' + item.description] }}"
   loop: "{{ updates_needed }}"
   loop_control:
     label: "{{ item.interface }}"
